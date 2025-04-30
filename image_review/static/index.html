@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Image Review</title>
+<style>
+body{font-family:sans-serif;max-width:800px;margin:auto}
+.card{border:1px solid #ccc;border-radius:8px;padding:8px;margin:12px 0;display:flex;align-items:center}
+.card img{max-width:240px;border-radius:4px;margin-right:12px}
+button{margin:0 4px;padding:6px 12px;font-size:14px;cursor:pointer}
+</style>
+</head>
+<body>
+<h2>Incoming Images</h2>
+<div id="container"></div>
+
+<script>
+async function fetchList(){
+  const files = await fetch('/api/images').then(r=>r.json());
+  const c     = document.getElementById('container');
+  c.innerHTML = '';
+  files.forEach(name=>{
+    const div  = document.createElement('div');
+    div.className = 'card';
+    div.innerHTML = `
+      <img src="/images/${name}?t=${Date.now()}">
+      <div>
+        <p>${name}</p>
+        <button onclick="approve('${name}', this)">Yes (save)</button>
+        <button onclick="this.closest('.card').remove()">No</button>
+      </div>`;
+    c.appendChild(div);
+  });
+}
+async function approve(name, btn){
+  btn.disabled = true; btn.textContent = 'Uploading…';
+  const ok = await fetch('/api/upload/'+name,{method:'POST'});
+  btn.textContent = ok.ok ? 'Saved ✅' : 'Error ❌';
+}
+setInterval(fetchList, 3000); // poll every 3 s
+fetchList();
+</script>
+</body>
+</html>
